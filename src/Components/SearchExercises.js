@@ -1,19 +1,45 @@
 import React, {useEffect, useState} from 'react';
 import {Box, Button, Stack, TextField, Typography} from '@mui/material';
-import { exerciseOptions } from '../Utils/fetchdata';
+import {exerciseOptions, fetchdata} from '../Utils/fetchdata';
+import HorizontScrollbar  from './HorizontScrollbar';
+
+
 
 
 
 const SearchExercises = () => {
-   const [search, setSearch] = useState('')
+  const [search, setSearch] = useState ('');
+  const [exercises, setExercises] = useState ([]);
+  const [bodyParts, setBodyParts] = useState ([])
 
-   const handleSearch = async() => {
-    if(search){
-      // const exercisesData = await fetchData(
-      //   'https://exercisedb.p.rapidapi.com/exercises/bodyPartList', exerciseOptions
-      // );
+  useEffect (() => {
+    const fetchExercisesData = async () => {
+      const bodyPartsData = await fetchdata (
+        'https://exercisedb.p.rapidapi.com/exercises/bodyPartList',
+        exerciseOptions
+      );
+      setBodyParts(['all', ...bodyPartsData])
+    };
+    fetchExercisesData();
+  }, []);
+
+  const handleSearch = async () => {
+    if (search) {
+      const exercisesData = await fetchdata (
+        'https://exercisedb.p.rapidapi.com/exercises',
+        exerciseOptions
+      );
+      const searchedExercises = exercisesData.filter (
+        exercise =>
+          exercise.name.toLocaleLowerCase ().includes (search) ||
+          exercise.equipment.toLocaleLowerCase ().includes (search) ||
+          exercise.bodyPart.toLocaleLowerCase ().includes (search) ||
+          exercise.target.toLocaleLowerCase ().includes (search)
+      );
+      setSearch ('');
+      setExercises (searchedExercises);
     }
-   }
+  };
   return (
     <Stack alignItems="center" mt="37px" justifyContent="center" p="20px">
       <Typography
@@ -36,7 +62,7 @@ const SearchExercises = () => {
           }}
           height="76px"
           value={search}
-          onChange={e => setSearch(e.target.value.toLocaleLowerCase())}
+          onChange={e => setSearch (e.target.value.toLocaleLowerCase ())}
           placeholder="Search Exercises"
           type="text"
         />
@@ -52,11 +78,14 @@ const SearchExercises = () => {
             position: 'absolute',
             right: '0',
           }}
-          onclick={handleSearch}
+          onClick={handleSearch}
         >
           Search
         </Button>
 
+      </Box>
+      <Box sx={{position:"relative", width:'100%', p:'20px'}}>
+          <HorizontScrollbar data={bodyParts}/>
       </Box>
     </Stack>
   );
